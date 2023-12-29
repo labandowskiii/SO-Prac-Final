@@ -21,8 +21,11 @@ pthread_mutex_t mutexInteractuarReponedor;
 
 
 /* Declaración de funciones*/
-void writeLogMessage ( char * id , char * msg );
 void crearNuevoCliente (int s);
+void *cajero (void *arg);
+void *cliente(void *arg);
+void *reponedor(void *arg);
+void writeLogMessage ( char * id , char * msg );
 
 int main(int argc, char *argv[]){
     // Crear sigaction para crear clientes
@@ -67,9 +70,13 @@ int main(int argc, char *argv[]){
     return 0;
 }
 
-void crearNuevoCliente (int s){
+void crearNuevoCliente (int s){}
 
-}
+void *cajero (void *arg){}
+
+void *cliente(void *arg){}
+
+void *reponedor(void *arg){}
 
 void writeLogMessage ( char * id , char * msg ) {
 // Calculamos la hora actual
