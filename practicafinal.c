@@ -56,6 +56,8 @@ int main(int argc, char *argv[]){
         exit(-1);
     }
 
+    printf("Programa en ejecución. PID: %d\n",getpid());
+    printf("Añadir cliente: kill -10 %d\n",getpid());
     // TODO: Crear fichero log
     // TODO: Inicializar lista de clientes
 
@@ -63,6 +65,7 @@ int main(int argc, char *argv[]){
     // TODO: Crear 1 hilo reponedor
 
     /* Esperar señales*/
+    fflush(stdout);
     while (1){
         pause();
     }
@@ -70,7 +73,11 @@ int main(int argc, char *argv[]){
     return 0;
 }
 
-void crearNuevoCliente (int s){}
+void crearNuevoCliente (int s){
+
+    printf("Llamada a crearNuevoCliente\n");
+
+}
 
 void *cajero (void *arg){}
 
@@ -86,6 +93,6 @@ void writeLogMessage ( char * id , char * msg ) {
     strftime ( stnow , 25 , " %d/ %m/ %y %H: %M: %S " , tlocal ) ;
 // Escribimos en el log
     archivoLog = fopen ( rutaArchivoLog , " a " ) ;
-    fprintf ( archivoLog , "[ %s ] %s : %s \ n " , stnow , id , msg ) ;
+    fprintf ( archivoLog , "[ %s ] %s : %s \n " , stnow , id , msg ) ;
     fclose ( archivoLog ) ;
 }
