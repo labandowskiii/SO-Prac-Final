@@ -76,6 +76,38 @@ int main(int argc, char *argv[]){
 void crearNuevoCliente (int s){
 
     printf("Llamada a crearNuevoCliente\n");
+   
+
+    // Buscamos una posición vacía en la lista de clientes
+    int posicion = -1;
+    pthread_mutex_lock(&mutexListaClientes);
+    for (int i = 0; i < 20; i++) {
+        if (listaClientes[i].estado == -1) {
+            posicion = i;
+            break;
+        }
+    }
+    pthread_mutex_unlock(&mutexListaClientes);
+
+    // Si hay hueco en la lista de clientes
+    if (posicion != -1) {
+        // Creamos un nuevo hilo cliente
+        pthread_t hiloCliente;
+        nuevoCliente->id = posicion + 1;
+        nuevoCliente->estado = 0;
+        pthread_create(&hiloCliente, NULL, accionesClientes, (void *)nuevoCliente);
+
+        // Rellenamos los datos del cliente (id, estado=0)
+        pthread_mutex_lock(&mutexListaClientes);
+        listaClientes[posicion] = *nuevoCliente;
+        pthread_mutex_unlock(&mutexListaClientes);
+    } else {
+        // Ignoramos la llamada si no hay hueco en la lista de clientes
+        printf("El supermercado está lleno. Cliente se va sin entrar.\n");
+    }
+
+    return NULL;
+}
 
 }
 
@@ -83,7 +115,28 @@ void *cajero (void *arg){}
 
 void *cliente(void *arg){}
 
-void *reponedor(void *arg){}
+void *reponedor(void *arg){
+
+while (1) {
+        // Esperar a que algún cajero me avise
+        pthread_mutex_lock(&mutexInteractuarReponedor);
+        pthread_mutex_unlock(&mutexInteractuarReponedor);
+
+        // Lógica de trabajo del reponedor
+        printf("Reponedor: Recibí una llamada para verificar un precio.\n");
+        writeLogMessage("Reponedor", "Recibí una llamada para verificar un precio.");
+
+        // Simular tiempo de trabajo (aleatorio entre 1 y 5 segundos)
+        int tiempoTrabajo = rand() % 5 + 1;
+        sleep(tiempoTrabajo);
+
+        // Avisar de que ha terminado el reponedor
+        printf("Reponedor: Verificación de precio completada.\n");
+        writeLogMessage("Reponedor", "Verificación de precio completada.");
+    }
+    return NULL;
+}
+}
 
 void writeLogMessage ( char * id , char * msg ) {
 // Calculamos la hora actual
