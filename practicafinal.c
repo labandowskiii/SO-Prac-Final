@@ -100,12 +100,11 @@ void crearNuevoCliente(int s) {
 
     printf("Llamada a crearNuevoCliente\n");
 
-
     // Buscamos una posición vacía en la lista de clientes
     int posicion = -1;
     pthread_mutex_lock(&mutexListaClientes);
     for (int i = 0; i < 20; i++) {
-        if (clientes[i]->estado == -1) {
+        if (clientes[i]->estado == 0) {
             posicion = i;
             break;
         }
@@ -113,9 +112,22 @@ void crearNuevoCliente(int s) {
 
     // Si hay hueco en la lista de clientes
     if (posicion != -1) {
+
+        pthread_mutex_lock(&mutexLog);
+        //char buffer[20];
+        //sprintf(buffer, "Cliente %d", posicion + 1);
+        //writeLogMessage(buffer, "Entra en el supermercado.");
+        writeLogMessage("Cliente", "Entra en el supermercado.");
+        pthread_mutex_unlock(&mutexLog);
+        printf("El cliente %d entra en el supermercado.\n", posicion + 1);
+
         // Creamos un nuevo hilo cliente
         pthread_t hiloCliente;
         struct Cliente *nuevoCliente = malloc(sizeof(struct Cliente));
+        if (nuevoCliente == NULL) {
+            printf("Error: ¡No se pudo asignar memoria!\n");
+            exit(1);
+        }
         nuevoCliente->id = posicion + 1;
         nuevoCliente->estado = 0;
         pthread_create(&hiloCliente, NULL, cliente, (void *) nuevoCliente);
@@ -147,7 +159,7 @@ void *reponedor(void *arg) {
 
         // Lógica de trabajo del reponedor
         printf("Reponedor: Recibí una llamada para verificar un precio.\n");
-        
+
         writeLogMessage("Reponedor", "Recibí una llamada para verificar un precio.");
 
         // Simular tiempo de trabajo (aleatorio entre 1 y 5 segundos)
