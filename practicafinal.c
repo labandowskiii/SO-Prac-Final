@@ -112,7 +112,7 @@ void crearNuevoCliente(int s) {
 
     // Si hay hueco en la lista de clientes
     if (posicion != -1) {
-
+        // FIXME: Al escribir en el log el programa falla
         pthread_mutex_lock(&mutexLog);
         //char buffer[20];
         //sprintf(buffer, "Cliente %d", posicion + 1);
