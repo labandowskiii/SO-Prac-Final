@@ -112,11 +112,7 @@ void crearNuevoCliente(int s) {
 
     // Si hay hueco en la lista de clientes
     if (posicion != -1) {
-        // FIXME: Al escribir en el log el programa falla
         pthread_mutex_lock(&mutexLog);
-        //char buffer[20];
-        //sprintf(buffer, "Cliente %d", posicion + 1);
-        //writeLogMessage(buffer, "Entra en el supermercado.");
         writeLogMessage("Cliente", "Entra en el supermercado.");
         pthread_mutex_unlock(&mutexLog);
         printf("El cliente %d entra en el supermercado.\n", posicion + 1);
@@ -181,7 +177,7 @@ void writeLogMessage(char *id, char *msg) {
     char stnow[25];
     strftime(stnow, 25, " %d/ %m/ %y %H: %M: %S ", tlocal);
 // Escribimos en el log
-    archivoLog = fopen(rutaArchivoLog, " a ");
+    archivoLog = fopen(rutaArchivoLog, "a");
     fprintf(archivoLog, "[ %s ] %s : %s \n ", stnow, id, msg);
     fclose(archivoLog);
 }
