@@ -75,7 +75,8 @@ int main(int argc, char *argv[]) {
 
     // Inicializar lista de clientes
     for (int i = 0; i < 20; i++) {
-        clientes[i] = NULL;
+        clientes[i] = malloc(sizeof(struct Cliente));
+        clientes[i]->estado = 2;
     }
 
 
@@ -112,8 +113,7 @@ void crearNuevoCliente(int s) {
     int posicion = -1;
     pthread_mutex_lock(&mutexListaClientes);
     for (int i = 0; i < 20; i++) {
-        if (clientes[i] == NULL) {
-            clientes[i] = malloc(sizeof(struct Cliente));
+        if (clientes[i]->estado == 2) {
             posicion = i;
             break;
         }
@@ -122,23 +122,19 @@ void crearNuevoCliente(int s) {
     // Si hay hueco en la lista de clientes
     if (posicion != -1) {
         pthread_mutex_lock(&mutexLog);
-        writeLogMessage("Cliente", posicion + 1, "Entra en el supermercado.");
+        writeLogMessage("Cliente", clientes[posicion]->id, "Entra en el supermercado.");
         pthread_mutex_unlock(&mutexLog);
-        printf("El cliente %d entra en el supermercado.\n", posicion + 1);
+        printf("Cliente %d entra en el supermercado.\n", clientes[posicion]->id);
 
         // Creamos un nuevo hilo cliente
         pthread_t hiloCliente;
-        struct Cliente *nuevoCliente = malloc(sizeof(struct Cliente));
-        if (nuevoCliente == NULL) {
-            printf("Error: ¡No se pudo asignar memoria!\n");
-            exit(1);
-        }
-        nuevoCliente->id = posicion + 1;
-        nuevoCliente->estado = 0;
-        pthread_create(&hiloCliente, NULL, cliente, (void *) nuevoCliente);
 
         // Rellenamos los datos del cliente (id, estado=0)
-        clientes[posicion] = nuevoCliente;
+        clientes[posicion]->estado = 0;
+        clientes[posicion]->id = posicion + 1;
+
+        pthread_create(&hiloCliente, NULL, cliente, (void *) clientes[posicion]);
+
     } else {
         // Ignoramos la llamada si no hay hueco en la lista de clientes
         printf("El supermercado está lleno. Cliente se va sin entrar.\n");
@@ -157,7 +153,7 @@ void *cajero(void *arg) {
         int posicion = -1;
         pthread_mutex_lock(&mutexListaClientes);
         for (int i = 0; i < 20; i++) {
-            if (clientes[i] != NULL && clientes[i]->estado == 0) {
+            if (clientes[i]->estado == 0) {
                 posicion = i;
                 // Cambiamos el estado del cliente a 1
                 clientes[posicion]->estado = 1;
@@ -179,7 +175,7 @@ void *cajero(void *arg) {
             int tiempoTrabajo = rand() % 5 + 1;
 
             // Escribimos la hora de la atención de la compra
-            printf("Cajero %d: Atendiendo al cliente %d.\n", cajero->id, posicion + 1);
+            printf("Cajero %d: Atendiendo al cliente %d.\n", cajero->id, cajero->id);
             pthread_mutex_lock(&mutexLog);
             writeLogMessage("Cajero", cajero->id, "Atendiendo al cliente.");
             pthread_mutex_unlock(&mutexLog);
@@ -211,7 +207,7 @@ void *cajero(void *arg) {
 
                 // Imprimir precio compra
                 char buffer[40];
-                sprintf(buffer, "Precio compra de Cliente %d: %d.\n", posicion + 1,
+                sprintf(buffer, "Precio compra de Cliente %d: %d.\n", cajero->id,
                         numeroAleatorio);
                 printf("Cajero %d: %s", cajero->id, buffer);
                 pthread_mutex_lock(&mutexLog);
@@ -227,9 +223,9 @@ void *cajero(void *arg) {
                 sleep(10);
             } else {
                 // El cliente ha terminado la compra sin imprevistos
-                printf("Cajero %d: Cliente %d ha terminado la compra.\n", cajero->id, posicion + 1);
+                printf("Cajero %d: Cliente %d ha terminado la compra.\n", cajero->id, cajero->id);
                 char buffer[40];
-                sprintf(buffer, "Precio compra de Cliente %d: %d.\n", posicion + 1,
+                sprintf(buffer, "Precio compra de Cliente %d: %d.\n", cajero->id,
                         numeroAleatorio);
                 printf("Cajero %d: %s", cajero->id, buffer);
                 pthread_mutex_lock(&mutexLog);
