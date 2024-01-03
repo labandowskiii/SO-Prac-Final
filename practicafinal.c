@@ -77,6 +77,7 @@ int main(int argc, char *argv[]) {
     for (int i = 0; i < 20; i++) {
         clientes[i] = malloc(sizeof(struct Cliente));
         clientes[i]->estado = 2;
+        clientes[i]->id = i + 1;
     }
 
 
@@ -175,9 +176,11 @@ void *cajero(void *arg) {
             int tiempoTrabajo = rand() % 5 + 1;
 
             // Escribimos la hora de la atención de la compra
-            printf("Cajero %d: Atendiendo al cliente %d.\n", cajero->id, cajero->id);
+            char buffer[40];
+            sprintf(buffer, "Atendiendo al Cliente %d.", clientes[posicion]->id);
+            printf("Cajero %d: %s\n", cajero->id, buffer);
             pthread_mutex_lock(&mutexLog);
-            writeLogMessage("Cajero", cajero->id, "Atendiendo al cliente.");
+            writeLogMessage("Cajero", cajero->id, buffer);
             pthread_mutex_unlock(&mutexLog);
 
             // Esperamos el tiempo de atención
@@ -185,6 +188,7 @@ void *cajero(void *arg) {
 
             // Generamos un numero aleatorio entre 1 y 100
             int numeroAleatorio = rand() % 100 + 1;
+            printf("Numero aleatorio: %d\n", numeroAleatorio);
             if (71 <= numeroAleatorio && numeroAleatorio <= 95) {
                 // Avisamos al reponedor y esperamos a que vuelva
                 printf("Cajero %d: Llamando al reponedor.\n", cajero->id);
@@ -302,7 +306,7 @@ void writeLogMessage(char *persona, int id, char *msg) {
     strftime(stnow, 25, "%d/ %m/ %y %H: %M: %S", tlocal);
 // Escribimos en el log
     archivoLog = fopen(rutaArchivoLog, "a");
-    fprintf(archivoLog, "[%s] %s(%d) : %s \n", stnow, persona, id, msg);
+    fprintf(archivoLog, "[%s] %s (%d): %s \n", stnow, persona, id, msg);
     fclose(archivoLog);
 }
 
