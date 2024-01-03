@@ -264,7 +264,25 @@ void *cajero(void *arg) {
 
 }
 
-void *cliente(void *arg) {}
+void *cliente(void *arg) {
+
+    struct Cliente *cliente = (struct Cliente *)arg;
+    
+    // simular tiempo de compras (entre 1 y 5)
+    int tiempoCompras = rand()%5 + 1;
+    sleep(tiempoCompras);
+
+    //señalizar al cajero que el cliente ha terminado
+    pthread_mutex_lock(&mutexListaClientes);
+    cliente ->estado = 2;
+    pthread_mutex_unlock(&mutexListaClientes);
+
+    //log
+    pthread_mutex_lock(&mutexLog);
+    printf("Cliente %d: Ha terminado las compras.\n", cliente->id);
+    writeLogMessage("Cliente", cliente->id, "Ha terminado las compras.");
+    pthread_mutex_unlock(&mutexLog);
+}
 
 void *reponedor(void *arg) {
 
