@@ -8,6 +8,8 @@
 struct Cliente {
     int id;
     int estado; // 0: Esperando | 1: En cajero | 2: atendido
+    time_t horaEntrada;//variable para controlar los 10 segundos antes de irse
+    int seVa;//simulador de 10% de irse
 };
 
 struct Cajero {
@@ -34,6 +36,8 @@ void *cajero(void *arg);
 void *cliente(void *arg);
 
 void *reponedor(void *arg);
+
+void *verificarTiempoCliente(void *arg);
 
 void writeLogMessage(char *persona, int id, char *msg);
 
@@ -97,6 +101,10 @@ int main(int argc, char *argv[]) {
     pthread_t hiloReponedor;
     pthread_create(&hiloReponedor, NULL, reponedor, NULL);
 
+    //crea el hilo que verifica el tiempo de los clientes
+    pthread_t hiloVerifica;
+    pthread_create(&hiloVerifica,NULL,verificarTiempoCliente,NULL);
+
     /* Esperar señales*/
     fflush(stdout);
     while (1) {
@@ -133,6 +141,9 @@ void crearNuevoCliente(int s) {
         // Rellenamos los datos del cliente (id, estado=0)
         clientes[posicion]->estado = 0;
         clientes[posicion]->id = posicion + 1;
+        clientes[posicion]->horaEntrada=time(NULL);
+        int probabilidad=rand()%100;
+        clientes[posicion]->seVa=probabilidad<10;
 
         pthread_create(&hiloCliente, NULL, cliente, (void *) clientes[posicion]);
 
@@ -313,6 +324,20 @@ void *reponedor(void *arg) {
         pthread_mutex_unlock(&mutexInteractuarReponedor);
     }
     return NULL;
+}
+
+void *verificarTiempoCliente(void *arg){
+    while(1){//se ejecuta todo el programa
+        for (int i=0;i<=20;i++){
+            if (clientes[i]->estado==2){
+                if (time(NULL)-clientes[i]->horaEntrada>=10){
+                    if (clientes[i]->seVa){
+
+                    }
+                }
+            }
+        }
+    }
 }
 
 
