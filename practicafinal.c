@@ -143,7 +143,7 @@ void crearNuevoCliente(int s) {
         clientes[posicion]->id = posicion + 1;
         clientes[posicion]->horaEntrada=time(NULL);
         int probabilidad=rand()%100;
-        clientes[posicion]->seVa=probabilidad<10;
+        clientes[posicion]->seVa=probabilidad<10;//boolean del 10%
 
         pthread_create(&hiloCliente, NULL, cliente, (void *) clientes[posicion]);
 
@@ -336,6 +336,7 @@ void *verificarTiempoCliente(void *arg){
                         printf("Cliente %d: Se ha cansado de esperar y se ha ido.\n",clientes[i]->id);
                         pthread_mutex_lock(&mutexLog);
                         writeLogMessage("Cliente",clientes[i]->id,"Se ha cansado de esperar y se ha ido.");
+                        pthread_mutex_unlock(&mutexLog);
                     }
                 }
             }
