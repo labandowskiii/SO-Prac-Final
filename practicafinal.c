@@ -329,8 +329,8 @@ void *reponedor(void *arg) {
 void *verificarTiempoCliente(void *arg){
     while(1){//se ejecuta todo el programa
         for (int i=0;i<20;i++){
-            if (clientes[i]->estado==2){
-                if (time(NULL)-clientes[i]->horaEntrada>=10){
+            if (clientes[i]->estado==0){//cliente esperando
+                if (time(NULL)-clientes[i]->horaEntrada>=10){//ha esperado más de 10 segundos
                     if (clientes[i]->seVa){
                         clientes[i]->estado=2;//señalizamos que el cliente se ha ido
                         printf("Cliente %d: Se ha cansado de esperar y se ha ido.\n",clientes[i]->id);
