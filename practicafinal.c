@@ -31,6 +31,7 @@ struct Cajero cajero1;
 struct Cajero cajero2;
 struct Cajero cajero3;
 pthread_t hiloCajero1, hiloCajero2, hiloCajero3, hiloReponedor, hiloVerifica;
+int clientesC1=0, clientesC2=0, clientesC3=0;
 
 
 /* Declaración de funciones*/
@@ -45,8 +46,6 @@ void *reponedor(void *arg);
 void *verificarTiempoCliente(void *arg);
 
 void terminarPrograma(int s);
-
-void terminarHilos(int s);
 
 void writeLogMessage(char *persona, int id, char *msg);
 
@@ -275,7 +274,17 @@ void *cajero(void *arg) {
 
             // Aumentamos el número de clientes atendidos
             cajero->numClientesAtendidos++;
-            cajero->numClientesAtendidosGlobal++;
+            switch (cajero->id) {
+                case 1:
+                    clientesC1++;
+                    break;
+                case 2:
+                    clientesC2++;
+                    break;
+                case 3:
+                    clientesC3++;
+                    break;
+            }
 
             // Si se ha atendido a 20 clientes, el cajero descansa 20 segundos
             if (cajero->numClientesAtendidos == 20) {
@@ -368,22 +377,17 @@ void *verificarTiempoCliente(void *arg){
 }
 
 void terminarPrograma(int s){
-    printf("Cajero1 ha atendido a %d clientes\n",cajero1.numClientesAtendidosGlobal);
-    printf("Cajero2 ha atendido a %d clientes\n", cajero2.numClientesAtendidosGlobal);
-    printf("Cajero3 ha atendido a %d clientes\n",cajero3.numClientesAtendidosGlobal);
-    printf("Programa terminado.\n");
     pthread_cancel(hiloCajero1);
     pthread_cancel(hiloCajero2);
     pthread_cancel(hiloCajero3);
     pthread_cancel(hiloReponedor);
+    printf("Cajero1 ha atendido a %d clientes\n",clientesC1);
+    printf("Cajero2 ha atendido a %d clientes\n", clientesC2);
+    printf("Cajero3 ha atendido a %d clientes\n",clientesC3);
+    printf("Programa terminado.\n");
     pthread_cancel(hiloVerifica);
 }
 
-
-void terminarHilos(int s){
-    //pthread_(NULL);
-    signal (SIGUSR2, terminarHilos);
-}
 
 
 void writeLogMessage(char *persona, int id, char *msg) {
