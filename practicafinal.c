@@ -27,6 +27,9 @@ pthread_mutex_t mutexLog;
 pthread_mutex_t mutexListaClientes;
 pthread_cond_t condicionInteractuarReponedor;
 pthread_mutex_t mutexInteractuarReponedor;
+struct Cajero *cajero1;
+struct Cajero *cajero2;
+struct Cajero *cajero3;
 
 
 /* Declaración de funciones*/
@@ -53,14 +56,6 @@ int main(int argc, char *argv[]) {
 
     if (sigaction(SIGUSR1, &sigCrearCliente, NULL) == -1) {
         perror("Error en sigaction sigCrearCliente");
-        exit(-1);
-    }
-
-    struct sigaction sigFinalPrograma;
-    sigFinalPrograma.sa_handler = terminarPrograma;
-
-    if (sigaction(SIGINT, &sigFinalPrograma, NULL) == -1) {
-        perror("Error en sigaction sigFinalPrograma");
         exit(-1);
     }
 
@@ -118,6 +113,15 @@ int main(int argc, char *argv[]) {
     pthread_t hiloVerifica;
     pthread_create(&hiloVerifica,NULL,verificarTiempoCliente,NULL);
 
+    struct sigaction sigFinalPrograma;
+    sigFinalPrograma.sa_handler = terminarPrograma;
+
+    if (sigaction(SIGUSR2, &sigFinalPrograma, NULL) == -1) {
+        perror("Error en sigaction sigFinalPrograma");
+        exit(-1);
+    }
+
+
     /* Esperar señales*/
     fflush(stdout);
     while (1) {
@@ -172,7 +176,7 @@ void crearNuevoCliente(int s) {
 void *cajero(void *arg) {
 
     struct Cajero *cajero = (struct Cajero *) arg;
-    signal (SIGINT, terminarHilos);
+    signal (SIGUSR2, terminarHilos);
     // Buscamos el cliente con menor id
     while (1) {
         int posicion = -1;
@@ -290,7 +294,7 @@ void *cajero(void *arg) {
 }
 
 void *cliente(void *arg) {
-    signal (SIGINT, terminarHilos);
+    signal (SIGUSR2, terminarHilos);
     struct Cliente *cliente = (struct Cliente *)arg;
     
     // simular tiempo de compras (entre 1 y 5)
@@ -311,7 +315,7 @@ void *cliente(void *arg) {
 
 void *reponedor(void *arg) {
 
-    signal (SIGINT, terminarHilos);
+    signal (SIGUSR2, terminarHilos);
     while (1) {
         // Esperar a que algún cajero me avise
         pthread_mutex_lock(&mutexInteractuarReponedor);
@@ -341,7 +345,7 @@ void *reponedor(void *arg) {
 }
 
 void *verificarTiempoCliente(void *arg){
-    signal (SIGINT, terminarHilos);
+    signal (SIGUSR2, terminarHilos);
     while(1){//se ejecuta todo el programa
         for (int i=0;i<20;i++){
             if (clientes[i]->estado==0){//cliente esperando
@@ -361,13 +365,16 @@ void *verificarTiempoCliente(void *arg){
 
 void terminarPrograma(int s){
     printf("Programa terminado.\n");
-    //pthread_cancel(&hiloCajero1);
-    //pthread_cancel(hiloCajero2);
+    printf("Cajero1 ha atendido a %d clientes",cajero1->numClientesAtendidosGlobal);
+    printf("Cajero2 ha atendido a %d clientes",cajero2->numClientesAtendidosGlobal);
+    printf("Cajero3 ha atendido a %d clientes",cajero3->numClientesAtendidosGlobal);
+    
 }
 
 
 void terminarHilos(int s){
     pthread_exit(NULL);
+    signal (SIGUSR2, terminarHilos);
 }
 
 
