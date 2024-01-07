@@ -385,6 +385,25 @@ void terminarPrograma(int s){
     printf("Cajero2 ha atendido a %d clientes\n", clientesC2);
     printf("Cajero3 ha atendido a %d clientes\n",clientesC3);
     printf("Programa terminado.\n");
+    pthread_mutex_lock(&mutexLog);
+    for (int i=0;i<3;i++){
+        char buffer[100];
+        switch (i){
+            case 0:
+                sprintf(buffer, "He atendido %d clientes", clientesC1);
+                writeLogMessage("Cajero",1,buffer);
+                break;
+            case 1:
+                sprintf(buffer, "He atendido %d clientes", clientesC2);
+                writeLogMessage("Cajero",2,buffer);
+                break;
+            case 2:
+                sprintf(buffer, "He atendido %d clientes", clientesC3);
+                writeLogMessage("Cajero",3,buffer);
+                break;
+        }
+    }
+    pthread_mutex_unlock(&mutexLog);
     pthread_cancel(hiloVerifica);
 }
 
