@@ -332,20 +332,55 @@ void *cliente(void *arg)
     // signal (SIGUSR2, terminarHilos);
     struct Cliente *cliente = (struct Cliente *)arg;
 
-    // simular tiempo de compras (entre 1 y 5)
+    // escribir en el log hora de llegada del cliente
+    char buffer[100];
+    time_t horaLlegada = time(NULL);
+    strftime(buffer, sizeof(buffer), "[%d/%m/%y %H:%M:%S]", localtime(&horaLlegada));
+    sprintf(buffer + strlen(buffer), " Cliente %d llega al supermercado.", cliente->id);
+    printf("%s\n", buffer);
+    pthread_mutex_lock(&mutexLog);
+    writeLogMessage("Cliente", cliente->id, buffer);
+    pthread_mutex_unlock(&mutexLog);
+
+    // simular el tiempo de espera:
+    int tiempoEspera = rand() %10 + 1;
+    int tiempoTranscurrido = 0;
+
+    // tiempo de espera o agente atiende. 
+    while(tiempoTranscurrido < tiempoEspera && cliente->estado == 0){
+        sleep(1); //esperamos 1 segundo y sumamos el tiempo transcurrido
+        tiempoTranscurrido++;
+    }
+    // si un cliente nos ha atendido, esperamos a que termine
+    if(cliente->estado == 0){
+        while(cliente->estado == 0){
+            usleep(1000); // evitar bucle infinito por si acaso. 
+        }
+    }
+
+   /* // simular tiempo de compras (entre 1 y 5)
     int tiempoCompras = rand() % 5 + 1;
     sleep(tiempoCompras);
 
     // señalizar al cajero que el cliente ha terminado
     pthread_mutex_lock(&mutexListaClientes);
     cliente->estado = 2;
-    pthread_mutex_unlock(&mutexListaClientes);
+    pthread_mutex_unlock(&mutexListaClientes);*/
 
     // log
+    time_t horaFinalizacion = time(NULL);
+    strftime(buffer, sizeof(buffer), "[%d/%m/%y %H:%M:%S]", localtime(&horaFinalizacion));
+    sprintf(buffer + strlen(buffer), " Cliente %d ha terminado las compras.", cliente->id);
+    printf("%s\n", buffer);
     pthread_mutex_lock(&mutexLog);
     printf("Cliente %d: Ha terminado las compras.\n", cliente->id);
-    writeLogMessage("Cliente", cliente->id, "Ha terminado las compras.");
+    writeLogMessage("Cliente", cliente->id, buffer);
     pthread_mutex_unlock(&mutexLog);
+    
+    // borrar información del cliente de la lista
+    pthread_mutex_lock(&mutexListaClientes);
+    cliente->estado = 2; // cliente ha sido atendido o se ha ido
+    pthread_mutex_unlock(&mutexListaClientes);
 }
 
 void *reponedor(void *arg)
