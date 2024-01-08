@@ -5,14 +5,16 @@
 #include <unistd.h>
 
 /*STRUCTS*/
-struct Cliente {
+struct Cliente
+{
     int id;
-    int estado; // 0: Esperando | 1: En cajero | 2: atendido
-    time_t horaEntrada;//variable para controlar los 10 segundos antes de irse
-    int seVa;//simulador de 10% de irse
+    int estado;         // 0: Esperando | 1: En cajero | 2: atendido
+    time_t horaEntrada; // variable para controlar los 10 segundos antes de irse
+    int seVa;           // simulador de 10% de irse
 };
 
-struct Cajero {
+struct Cajero
+{
     int id;
     int numClientesAtendidos;
     int numClientesAtendidosGlobal;
@@ -31,8 +33,7 @@ struct Cajero cajero1;
 struct Cajero cajero2;
 struct Cajero cajero3;
 pthread_t hiloCajero1, hiloCajero2, hiloCajero3, hiloReponedor, hiloVerifica;
-int clientesC1=0, clientesC2=0, clientesC3=0;
-
+int clientesC1 = 0, clientesC2 = 0, clientesC3 = 0;
 
 /* Declaración de funciones*/
 void crearNuevoCliente(int s);
@@ -49,49 +50,52 @@ void terminarPrograma(int s);
 
 void writeLogMessage(char *persona, int id, char *msg);
 
-int main(int argc, char *argv[]) {
+int main(int argc, char *argv[])
+{
     // Crear sigaction para crear clientes
     struct sigaction sigCrearCliente;
     sigCrearCliente.sa_handler = crearNuevoCliente;
 
-    if (sigaction(SIGUSR1, &sigCrearCliente, NULL) == -1) {
+    if (sigaction(SIGUSR1, &sigCrearCliente, NULL) == -1)
+    {
         perror("Error en sigaction sigCrearCliente");
         exit(-1);
     }
 
     // Inicializar recursos
-    if (pthread_mutex_init(&mutexInteractuarReponedor, NULL) != 0) {
+    if (pthread_mutex_init(&mutexInteractuarReponedor, NULL) != 0)
+    {
         perror("Error al inicializar mutexInteractuarReponedor");
         exit(-1);
     }
-    if (pthread_mutex_init(&mutexListaClientes, NULL) != 0) {
+    if (pthread_mutex_init(&mutexListaClientes, NULL) != 0)
+    {
         perror("Error al inicializar mutexListaClientes");
         exit(-1);
     }
-    if (pthread_mutex_init(&mutexLog, NULL) != 0) {
+    if (pthread_mutex_init(&mutexLog, NULL) != 0)
+    {
         perror("Error al inicializar mutexLog");
         exit(-1);
     }
 
-    if (pthread_cond_init(&condicionInteractuarReponedor, NULL) != 0) {
+    if (pthread_cond_init(&condicionInteractuarReponedor, NULL) != 0)
+    {
         perror("Error al inicializar condicionInteractuarReponedor");
         exit(-1);
     }
-
-    printf("Programa en ejecución. PID: %d\n", getpid());
-    printf("Añadir cliente: kill -10 %d\n", getpid());
 
     // Crear fichero log
     archivoLog = fopen(rutaArchivoLog, "w");
     fclose(archivoLog);
 
     // Inicializar lista de clientes
-    for (int i = 0; i < 20; i++) {
+    for (int i = 0; i < 20; i++)
+    {
         clientes[i] = malloc(sizeof(struct Cliente));
         clientes[i]->estado = 2;
         clientes[i]->id = i + 1;
     }
-
 
     // Crear 3 hilos cajero
     struct Cajero *cajero1 = malloc(sizeof(struct Cajero));
@@ -100,53 +104,62 @@ int main(int argc, char *argv[]) {
     cajero2->id = 2;
     struct Cajero *cajero3 = malloc(sizeof(struct Cajero));
     cajero3->id = 3;
-    //pthread_t hiloCajero1, hiloCajero2, hiloCajero3;
-    pthread_create(&hiloCajero1, NULL, cajero, (void *) cajero1);
-    pthread_create(&hiloCajero2, NULL, cajero, (void *) cajero2);
-    pthread_create(&hiloCajero3, NULL, cajero, (void *) cajero3);
+    // pthread_t hiloCajero1, hiloCajero2, hiloCajero3;
+    pthread_create(&hiloCajero1, NULL, cajero, (void *)cajero1);
+    pthread_create(&hiloCajero2, NULL, cajero, (void *)cajero2);
+    pthread_create(&hiloCajero3, NULL, cajero, (void *)cajero3);
 
     // Crear 1 hilo reponedor
-    //pthread_t hiloReponedor;
+    // pthread_t hiloReponedor;
     pthread_create(&hiloReponedor, NULL, reponedor, NULL);
 
-    //crea el hilo que verifica el tiempo de los clientes
-    //pthread_t hiloVerifica;
-    pthread_create(&hiloVerifica,NULL,verificarTiempoCliente,NULL);
+    // crea el hilo que verifica el tiempo de los clientes
+    // pthread_t hiloVerifica;
+    pthread_create(&hiloVerifica, NULL, verificarTiempoCliente, NULL);
 
     struct sigaction sigFinalPrograma;
     sigFinalPrograma.sa_handler = terminarPrograma;
 
-    if (sigaction(SIGUSR2, &sigFinalPrograma, NULL) == -1) {
+    if (sigaction(SIGINT, &sigFinalPrograma, NULL) == -1)
+    {
         perror("Error en sigaction sigFinalPrograma");
         exit(-1);
     }
 
+    printf("Programa en ejecución. PID: %d\n", getpid());
+    printf("Añadir cliente: kill -10 %d\n", getpid());
+    printf("Terminar programa: ctrl + c\n");
 
     /* Esperar señales*/
     fflush(stdout);
-    while (1) {
+    while (1)
+    {
         pause();
     }
 
     return 0;
 }
 
-void crearNuevoCliente(int s) {
+void crearNuevoCliente(int s)
+{
 
     printf("Llamada a crearNuevoCliente\n");
 
     // Buscamos una posición vacía en la lista de clientes
     int posicion = -1;
     pthread_mutex_lock(&mutexListaClientes);
-    for (int i = 0; i < 20; i++) {
-        if (clientes[i]->estado == 2) {
+    for (int i = 0; i < 20; i++)
+    {
+        if (clientes[i]->estado == 2)
+        {
             posicion = i;
             break;
         }
     }
 
     // Si hay hueco en la lista de clientes
-    if (posicion != -1) {
+    if (posicion != -1)
+    {
         pthread_mutex_lock(&mutexLog);
         writeLogMessage("Cliente", clientes[posicion]->id, "Entra en el supermercado.");
         pthread_mutex_unlock(&mutexLog);
@@ -158,32 +171,35 @@ void crearNuevoCliente(int s) {
         // Rellenamos los datos del cliente (id, estado=0)
         clientes[posicion]->estado = 0;
         clientes[posicion]->id = posicion + 1;
-        clientes[posicion]->horaEntrada=time(NULL);
-        int probabilidad=rand()%100;
-        clientes[posicion]->seVa=probabilidad<10;//boolean del 10%
+        clientes[posicion]->horaEntrada = time(NULL);
+        int probabilidad = rand() % 100;
+        clientes[posicion]->seVa = probabilidad < 10; // boolean del 10%
 
-        pthread_create(&hiloCliente, NULL, cliente, (void *) clientes[posicion]);
-
-    } else {
+        pthread_create(&hiloCliente, NULL, cliente, (void *)clientes[posicion]);
+    }
+    else
+    {
         // Ignoramos la llamada si no hay hueco en la lista de clientes
         printf("El supermercado está lleno. Cliente se va sin entrar.\n");
     }
     pthread_mutex_unlock(&mutexListaClientes);
-
 }
 
+void *cajero(void *arg)
+{
 
-void *cajero(void *arg) {
-
-    struct Cajero *cajero = (struct Cajero *) arg;
-    //signal (SIGUSR2, terminarHilos);
-    // Buscamos el cliente con menor id
-    while (1) {
+    struct Cajero *cajero = (struct Cajero *)arg;
+    // signal (SIGUSR2, terminarHilos);
+    //  Buscamos el cliente con menor id
+    while (1)
+    {
         pthread_testcancel();
         int posicion = -1;
         pthread_mutex_lock(&mutexListaClientes);
-        for (int i = 0; i < 20; i++) {
-            if (clientes[i]->estado == 0) {
+        for (int i = 0; i < 20; i++)
+        {
+            if (clientes[i]->estado == 0)
+            {
                 posicion = i;
                 // Cambiamos el estado del cliente a 1
                 clientes[posicion]->estado = 1;
@@ -193,8 +209,8 @@ void *cajero(void *arg) {
         pthread_mutex_unlock(&mutexListaClientes);
 
         // Si hay clientes en la lista
-        if (posicion != -1) {
-
+        if (posicion != -1)
+        {
 
             // Cambiamos el estado del cliente a 1
             pthread_mutex_lock(&mutexListaClientes);
@@ -218,7 +234,8 @@ void *cajero(void *arg) {
             // Generamos un numero aleatorio entre 1 y 100
             int numeroAleatorio = rand() % 100 + 1;
             printf("Numero aleatorio: %d\n", numeroAleatorio);
-            if (71 <= numeroAleatorio && numeroAleatorio <= 95) {
+            if (71 <= numeroAleatorio && numeroAleatorio <= 95)
+            {
                 // Avisamos al reponedor y esperamos a que vuelva
                 printf("Cajero %d: Llamando al reponedor.\n", cajero->id);
                 pthread_mutex_lock(&mutexLog);
@@ -247,14 +264,18 @@ void *cajero(void *arg) {
                 writeLogMessage("Cajero", cajero->id, buffer);
                 pthread_mutex_unlock(&mutexLog);
                 sleep(10);
-            } else if (96 <= numeroAleatorio && numeroAleatorio <= 100) {
+            }
+            else if (96 <= numeroAleatorio && numeroAleatorio <= 100)
+            {
                 // El cliente tiene algun problema y no se puede completar la compra
                 printf("Cajero %d: Error en el cliente, no se puede realizar la compra.\n", cajero->id);
                 pthread_mutex_lock(&mutexLog);
                 writeLogMessage("Cajero", cajero->id, "Error en el cajero.");
                 pthread_mutex_unlock(&mutexLog);
                 sleep(10);
-            } else {
+            }
+            else
+            {
                 // El cliente ha terminado la compra sin imprevistos
                 printf("Cajero %d: Cliente %d ha terminado la compra.\n", cajero->id, cajero->id);
                 char buffer[40];
@@ -274,20 +295,22 @@ void *cajero(void *arg) {
 
             // Aumentamos el número de clientes atendidos
             cajero->numClientesAtendidos++;
-            switch (cajero->id) {
-                case 1:
-                    clientesC1++;
-                    break;
-                case 2:
-                    clientesC2++;
-                    break;
-                case 3:
-                    clientesC3++;
-                    break;
+            switch (cajero->id)
+            {
+            case 1:
+                clientesC1++;
+                break;
+            case 2:
+                clientesC2++;
+                break;
+            case 3:
+                clientesC3++;
+                break;
             }
 
             // Si se ha atendido a 20 clientes, el cajero descansa 20 segundos
-            if (cajero->numClientesAtendidos == 20) {
+            if (cajero->numClientesAtendidos == 20)
+            {
                 printf("Cajero %d: He atendido 20 clientes, descansando.\n", cajero->id);
                 pthread_mutex_lock(&mutexLog);
                 writeLogMessage("Cajero", cajero->id, "He atendido 20 clientes, descansando.");
@@ -301,33 +324,35 @@ void *cajero(void *arg) {
             }
         }
     }
-
 }
 
-void *cliente(void *arg) {
-    //signal (SIGUSR2, terminarHilos);
+void *cliente(void *arg)
+{
+    // signal (SIGUSR2, terminarHilos);
     struct Cliente *cliente = (struct Cliente *)arg;
-    
+
     // simular tiempo de compras (entre 1 y 5)
-    int tiempoCompras = rand()%5 + 1;
+    int tiempoCompras = rand() % 5 + 1;
     sleep(tiempoCompras);
 
-    //señalizar al cajero que el cliente ha terminado
+    // señalizar al cajero que el cliente ha terminado
     pthread_mutex_lock(&mutexListaClientes);
-    cliente ->estado = 2;
+    cliente->estado = 2;
     pthread_mutex_unlock(&mutexListaClientes);
 
-    //log
+    // log
     pthread_mutex_lock(&mutexLog);
     printf("Cliente %d: Ha terminado las compras.\n", cliente->id);
     writeLogMessage("Cliente", cliente->id, "Ha terminado las compras.");
     pthread_mutex_unlock(&mutexLog);
 }
 
-void *reponedor(void *arg) {
+void *reponedor(void *arg)
+{
 
-    //signal (SIGUSR2, terminarHilos);
-    while (1) {
+    // signal (SIGUSR2, terminarHilos);
+    while (1)
+    {
         pthread_testcancel();
         // Esperar a que algún cajero me avise
         pthread_mutex_lock(&mutexInteractuarReponedor);
@@ -356,18 +381,24 @@ void *reponedor(void *arg) {
     return NULL;
 }
 
-void *verificarTiempoCliente(void *arg){
-    //signal (SIGUSR2, terminarHilos);
-    while(1){//se ejecuta todo el programa
-    pthread_testcancel();
-        for (int i=0;i<20;i++){
-            if (clientes[i]->estado==0){//cliente esperando
-                if (time(NULL)-clientes[i]->horaEntrada>=10){//ha esperado más de 10 segundos
-                    if (clientes[i]->seVa){
-                        clientes[i]->estado=2;//señalizamos que el cliente se ha ido
-                        printf("Cliente %d: Se ha cansado de esperar y se ha ido.\n",clientes[i]->id);
+void *verificarTiempoCliente(void *arg)
+{
+    // signal (SIGUSR2, terminarHilos);
+    while (1)
+    { // se ejecuta todo el programa
+        pthread_testcancel();
+        for (int i = 0; i < 20; i++)
+        {
+            if (clientes[i]->estado == 0)
+            { // cliente esperando
+                if (time(NULL) - clientes[i]->horaEntrada >= 10)
+                { // ha esperado más de 10 segundos
+                    if (clientes[i]->seVa)
+                    {
+                        clientes[i]->estado = 2; // señalizamos que el cliente se ha ido
+                        printf("Cliente %d: Se ha cansado de esperar y se ha ido.\n", clientes[i]->id);
                         pthread_mutex_lock(&mutexLog);
-                        writeLogMessage("Cliente",clientes[i]->id,"Se ha cansado de esperar y se ha ido.");
+                        writeLogMessage("Cliente", clientes[i]->id, "Se ha cansado de esperar y se ha ido.");
                         pthread_mutex_unlock(&mutexLog);
                     }
                 }
@@ -376,48 +407,50 @@ void *verificarTiempoCliente(void *arg){
     }
 }
 
-void terminarPrograma(int s){
+void terminarPrograma(int s)
+{
     pthread_cancel(hiloCajero1);
     pthread_cancel(hiloCajero2);
     pthread_cancel(hiloCajero3);
     pthread_cancel(hiloReponedor);
-    printf("Cajero1 ha atendido a %d clientes\n",clientesC1);
+    printf("\nCajero1 ha atendido a %d clientes\n", clientesC1);
     printf("Cajero2 ha atendido a %d clientes\n", clientesC2);
-    printf("Cajero3 ha atendido a %d clientes\n",clientesC3);
+    printf("Cajero3 ha atendido a %d clientes\n", clientesC3);
     printf("Programa terminado.\n");
     pthread_mutex_lock(&mutexLog);
-    for (int i=0;i<3;i++){
+    for (int i = 0; i < 3; i++)
+    {
         char buffer[100];
-        switch (i){
-            case 0:
-                sprintf(buffer, "He atendido %d clientes", clientesC1);
-                writeLogMessage("Cajero",1,buffer);
-                break;
-            case 1:
-                sprintf(buffer, "He atendido %d clientes", clientesC2);
-                writeLogMessage("Cajero",2,buffer);
-                break;
-            case 2:
-                sprintf(buffer, "He atendido %d clientes", clientesC3);
-                writeLogMessage("Cajero",3,buffer);
-                break;
+        switch (i)
+        {
+        case 0:
+            sprintf(buffer, "He atendido %d clientes", clientesC1);
+            writeLogMessage("Cajero", 1, buffer);
+            break;
+        case 1:
+            sprintf(buffer, "He atendido %d clientes", clientesC2);
+            writeLogMessage("Cajero", 2, buffer);
+            break;
+        case 2:
+            sprintf(buffer, "He atendido %d clientes", clientesC3);
+            writeLogMessage("Cajero", 3, buffer);
+            break;
         }
     }
     pthread_mutex_unlock(&mutexLog);
     pthread_cancel(hiloVerifica);
+    exit(0);
 }
 
-
-
-void writeLogMessage(char *persona, int id, char *msg) {
-// Calculamos la hora actual
+void writeLogMessage(char *persona, int id, char *msg)
+{
+    // Calculamos la hora actual
     time_t now = time(0);
     struct tm *tlocal = localtime(&now);
     char stnow[25];
     strftime(stnow, 25, "%d/ %m/ %y %H: %M: %S", tlocal);
-// Escribimos en el log
+    // Escribimos en el log
     archivoLog = fopen(rutaArchivoLog, "a");
     fprintf(archivoLog, "[%s] %s (%d): %s \n", stnow, persona, id, msg);
     fclose(archivoLog);
 }
-
