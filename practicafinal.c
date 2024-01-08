@@ -257,9 +257,9 @@ void *cajero(void *arg)
 
                 // Imprimir precio compra
                 char buffer[40];
-                sprintf(buffer, "Precio compra de Cliente %d: %d.\n", cajero->id,
+                sprintf(buffer, "Precio compra de Cliente %d: %d.", cajero->id,
                         numeroAleatorio);
-                printf("Cajero %d: %s", cajero->id, buffer);
+                printf("Cajero %d: %s\n", cajero->id, buffer);
                 pthread_mutex_lock(&mutexLog);
                 writeLogMessage("Cajero", cajero->id, buffer);
                 pthread_mutex_unlock(&mutexLog);
@@ -277,14 +277,15 @@ void *cajero(void *arg)
             else
             {
                 // El cliente ha terminado la compra sin imprevistos
-                printf("Cajero %d: Cliente %d ha terminado la compra.\n", cajero->id, cajero->id);
-                char buffer[40];
-                sprintf(buffer, "Precio compra de Cliente %d: %d.\n", cajero->id,
+                char buffer1[40], buffer2[40];
+                sprintf(buffer1, "Cliente %d ha terminado la compra", posicion + 1);
+                sprintf(buffer2, "Precio compra de Cliente %d: %d.", posicion + 1,
                         numeroAleatorio);
-                printf("Cajero %d: %s", cajero->id, buffer);
+                printf("Cajero %d: %s\n", cajero->id, buffer1);
+                printf("Cajero %d: %s\n", cajero->id, buffer2);
                 pthread_mutex_lock(&mutexLog);
-                writeLogMessage("Cajero", cajero->id, "Cliente ha terminado la compra.");
-                writeLogMessage("Cajero", cajero->id, buffer);
+                writeLogMessage("Cajero", cajero->id, buffer1);
+                writeLogMessage("Cajero", cajero->id, buffer2);
                 pthread_mutex_unlock(&mutexLog);
             }
 
