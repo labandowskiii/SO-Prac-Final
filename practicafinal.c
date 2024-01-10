@@ -32,7 +32,7 @@ pthread_mutex_t mutexInteractuarReponedor;
 struct Cajero cajero1;
 struct Cajero cajero2;
 struct Cajero cajero3;
-pthread_t hiloCajero1, hiloCajero2, hiloCajero3, hiloReponedor, hiloVerifica;
+pthread_t hiloCajero1, hiloCajero2, hiloCajero3, hiloReponedor;
 int clientesC1 = 0, clientesC2 = 0, clientesC3 = 0;
 
 /* Declaración de funciones*/
@@ -469,7 +469,6 @@ void terminarPrograma(int s)
         }
     }
     pthread_mutex_unlock(&mutexLog);
-    pthread_cancel(hiloVerifica);
     exit(0);
 }
 
