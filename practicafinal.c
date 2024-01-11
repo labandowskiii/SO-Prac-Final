@@ -156,6 +156,7 @@ void crearNuevoCliente(int s)
     // Si hay hueco en la lista de clientes
     if (posicion != -1)
     {
+        printf("Hay hueco en la lista de clientes\n");
         // Creamos un nuevo hilo cliente
         pthread_t hiloCliente;
 
@@ -171,10 +172,8 @@ void crearNuevoCliente(int s)
     {
         // Ignoramos la llamada si no hay hueco en la lista de clientes
         pthread_mutex_lock(&mutexLog);
-        char buffer[40];
-        sprintf(buffer, "El supermercado está lleno. Me voy.");
-        printf("Cliente(%d): %s\n", clientes[posicion]->id, buffer);
-        writeLogMessage("Cliente", clientes[posicion]->id, buffer);
+        printf("No hay hueco en la lista de clientes\n");
+        writeLogMessage("Supermercado", 0, "No hay hueco en la lista de clientes");
         pthread_mutex_unlock(&mutexLog);
     }
     pthread_mutex_unlock(&mutexListaClientes);
