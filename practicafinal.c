@@ -165,13 +165,17 @@ void crearNuevoCliente(int s)
         clientes[posicion]->horaEntrada = time(NULL);
         int probabilidad = rand() % 100;
         clientes[posicion]->seVa = probabilidad < 10; // boolean del 10%
-
         pthread_create(&hiloCliente, NULL, cliente, (void *)clientes[posicion]);
     }
     else
     {
         // Ignoramos la llamada si no hay hueco en la lista de clientes
-        printf("El supermercado está lleno. Cliente se va sin entrar.\n");
+        pthread_mutex_lock(&mutexLog);
+        char buffer[40];
+        sprintf(buffer, "El supermercado está lleno. Me voy.");
+        printf("Cliente(%d): %s\n", clientes[posicion]->id, buffer);
+        writeLogMessage("Cliente", clientes[posicion]->id, buffer);
+        pthread_mutex_unlock(&mutexLog);
     }
     pthread_mutex_unlock(&mutexListaClientes);
 }
@@ -350,32 +354,33 @@ void *cliente(void *arg)
         pthread_mutex_lock(&mutexLog);
         writeLogMessage("Cliente", cliente->id, "Se ha cansado de esperar y se ha ido.");
         pthread_mutex_unlock(&mutexLog);
-        exit(0);
     }
-
-    // si un cliente nos ha atendido, esperamos a que termine
-    if (cliente->estado == 0)
+    else
     {
-        while (cliente->estado == 0)
+        // si un cliente nos ha atendido, esperamos a que termine
+        if (cliente->estado == 0)
         {
-            usleep(1000); // evitar bucle infinito por si acaso.
+            while (cliente->estado == 0)
+            {
+                usleep(1000); // evitar bucle infinito por si acaso.
+            }
         }
+
+        // log
+        time_t horaFinalizacion = time(NULL);
+        strftime(buffer, sizeof(buffer), "[%d/%m/%y %H:%M:%S]", localtime(&horaFinalizacion));
+        sprintf(buffer, "Cliente (%d): He terminado las compras.", cliente->id);
+        printf("%s\n", buffer);
+        pthread_mutex_lock(&mutexLog);
+        printf("Cliente %d: Ha terminado las compras.\n", cliente->id);
+        writeLogMessage("Cliente", cliente->id, buffer);
+        pthread_mutex_unlock(&mutexLog);
+
+        // borrar información del cliente de la lista
+        pthread_mutex_lock(&mutexListaClientes);
+        cliente->estado = 2; // cliente ha sido atendido o se ha ido
+        pthread_mutex_unlock(&mutexListaClientes);
     }
-
-    // log
-    time_t horaFinalizacion = time(NULL);
-    strftime(buffer, sizeof(buffer), "[%d/%m/%y %H:%M:%S]", localtime(&horaFinalizacion));
-    sprintf(buffer, "Cliente (%d): He terminado las compras.", cliente->id);
-    printf("%s\n", buffer);
-    pthread_mutex_lock(&mutexLog);
-    printf("Cliente %d: Ha terminado las compras.\n", cliente->id);
-    writeLogMessage("Cliente", cliente->id, buffer);
-    pthread_mutex_unlock(&mutexLog);
-
-    // borrar información del cliente de la lista
-    pthread_mutex_lock(&mutexListaClientes);
-    cliente->estado = 2; // cliente ha sido atendido o se ha ido
-    pthread_mutex_unlock(&mutexListaClientes);
 }
 
 void *reponedor(void *arg)
