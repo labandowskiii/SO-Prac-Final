@@ -11,11 +11,13 @@ function compilar(){
 }
 
 function ejecutar(){
+        echo "introduzca el numero de clientes a crear"
+        read clientes
         if test -f final
         then
                 if test -x final
                 then
-					./final
+					./ejecutar.sh $clientes
                 else
                         echo -e "El archivo no tiene permisos de ejecucion\n"
 
