@@ -22,7 +22,7 @@ do
   # Enviar una señal al proceso
   kill -10 $PID
   # Esperar un poco antes de enviar la próxima señal
-  sleep 1
+  sleep 0.5
   i=$(( $i + 1 ))
 done
 
