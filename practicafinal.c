@@ -368,10 +368,10 @@ void *cliente(void *arg)
         // log
         time_t horaFinalizacion = time(NULL);
         strftime(buffer, sizeof(buffer), "[%d/%m/%y %H:%M:%S]", localtime(&horaFinalizacion));
-        sprintf(buffer, "Cliente (%d): He terminado las compras.", cliente->id);
+        sprintf(buffer, "He terminado las compras.");
         printf("%s\n", buffer);
         pthread_mutex_lock(&mutexLog);
-        printf("Cliente %d: Ha terminado las compras.\n", cliente->id);
+        printf("Cliente %d: He terminado las compras.\n", cliente->id);
         writeLogMessage("Cliente", cliente->id, buffer);
         pthread_mutex_unlock(&mutexLog);
 
