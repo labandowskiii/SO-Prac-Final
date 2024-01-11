@@ -13,7 +13,11 @@ function compilar(){
 function ejecutar(){
         echo "introduzca el numero de clientes a crear"
         read clientes
-        if test -f final
+        if [ $clientes -lt 1 ]
+        then
+                echo -e "El numero de clientes debe ser mayor a 0\n"
+                ejecutar
+        elif test -f final
         then
                 if test -x final
                 then
