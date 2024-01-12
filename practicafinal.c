@@ -28,7 +28,6 @@ pthread_mutex_t mutexListaClientes;
 pthread_mutex_t mutexInteractuarReponedor;
 pthread_cond_t condicionInteractuarReponedor;
 
-// TODO: Mirar de mover a main
 struct Cajero *cajero1;
 struct Cajero *cajero2;
 struct Cajero *cajero3;
