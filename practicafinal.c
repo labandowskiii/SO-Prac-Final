@@ -27,12 +27,15 @@ FILE *archivoLog;
 struct Cliente *clientes[20];
 pthread_mutex_t mutexLog;
 pthread_mutex_t mutexListaClientes;
-pthread_cond_t condicionInteractuarReponedor;
 pthread_mutex_t mutexInteractuarReponedor;
+pthread_cond_t condicionInteractuarReponedor;
+
+// TODO: Mirar de mover a main
 struct Cajero cajero1;
 struct Cajero cajero2;
 struct Cajero cajero3;
 pthread_t hiloCajero1, hiloCajero2, hiloCajero3, hiloReponedor;
+// TODO: Mirar de eliminar y usar los de cajero
 int clientesC1 = 0, clientesC2 = 0, clientesC3 = 0;
 
 /* Declaración de funciones*/
@@ -184,10 +187,10 @@ void *cajero(void *arg)
 
     struct Cajero *cajero = (struct Cajero *)arg;
     // signal (SIGUSR2, terminarHilos);
-    //  Buscamos el cliente con menor id
     while (1)
     {
         pthread_testcancel();
+        //  Buscamos el cliente con menor id
         int posicion = -1;
         pthread_mutex_lock(&mutexListaClientes);
         for (int i = 0; i < 20; i++)
@@ -195,8 +198,6 @@ void *cajero(void *arg)
             if (clientes[i]->estado == 0)
             {
                 posicion = i;
-                // Cambiamos el estado del cliente a 1
-                clientes[posicion]->estado = 1;
                 break;
             }
         }
@@ -338,7 +339,6 @@ void *cliente(void *arg)
 
     // Calculamos el tiempo de espera maximo
     int tiempoEspera = rand() % 10 + 1;
-    int tiempoTranscurrido = 0;
 
     // Esperamos a que expire el tiempo de espera o que nos atienda un agente
     sleep(tiempoEspera);
@@ -347,8 +347,12 @@ void *cliente(void *arg)
     int posibilidadIrse = rand() % 100 + 1;
     if (posibilidadIrse < 10)
     {
+        pthread_mutex_lock(&mutexListaClientes);
         cliente->seVa = 1;
         cliente->estado = 2;
+        clientes[cliente->id - 1]->estado = 2;
+        pthread_mutex_unlock(&mutexListaClientes);
+
         printf("Cliente %d: Se ha cansado de esperar y se ha ido.\n", cliente->id);
         pthread_mutex_lock(&mutexLog);
         writeLogMessage("Cliente", cliente->id, "Se ha cansado de esperar y se ha ido.");
@@ -377,7 +381,9 @@ void *cliente(void *arg)
 
         // borrar información del cliente de la lista
         pthread_mutex_lock(&mutexListaClientes);
-        cliente->estado = 2; // cliente ha sido atendido o se ha ido
+        // cliente ha sido atendido o se ha ido
+        clientes[cliente->id - 1]->estado = 2;
+        cliente->estado = 2;
         pthread_mutex_unlock(&mutexListaClientes);
     }
 }
