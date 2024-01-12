@@ -33,8 +33,6 @@ struct Cajero *cajero1;
 struct Cajero *cajero2;
 struct Cajero *cajero3;
 pthread_t hiloCajero1, hiloCajero2, hiloCajero3, hiloReponedor;
-// TODO: Mirar de eliminar y usar los de cajero
-int clientesAtendidosCajero1 = 0, clientesAtendidosCajero2 = 0, clientesAtendidosCajero3 = 0;
 
 /* Declaración de funciones*/
 void crearNuevoCliente(int s);
@@ -288,18 +286,6 @@ void *cajero(void *arg)
             // Aumentamos el número de clientes atendidos
             cajero->numClientesAtendidos++;
             cajero->numClientesAtendidosGlobal++;
-            switch (cajero->id)
-            {
-            case 1:
-                clientesAtendidosCajero1++;
-                break;
-            case 2:
-                clientesAtendidosCajero2++;
-                break;
-            case 3:
-                clientesAtendidosCajero3++;
-                break;
-            }
 
             // Si se ha atendido a 20 clientes, el cajero descansa 20 segundos
             if (cajero->numClientesAtendidos == 20)
@@ -424,9 +410,9 @@ void terminarPrograma(int s)
     pthread_cancel(hiloCajero2);
     pthread_cancel(hiloCajero3);
     pthread_cancel(hiloReponedor);
-    printf("\nCajero1 ha atendido a %d clientes\n", cajero1->numClientesAtendidosGlobal);
-    printf("Cajero2 ha atendido a %d clientes\n", cajero2->numClientesAtendidosGlobal);
-    printf("Cajero3 ha atendido a %d clientes\n", cajero3->numClientesAtendidosGlobal);
+    printf("\nCajero 1 ha atendido a %d clientes\n", cajero1->numClientesAtendidosGlobal);
+    printf("Cajero 2 ha atendido a %d clientes\n", cajero2->numClientesAtendidosGlobal);
+    printf("Cajero 3 ha atendido a %d clientes\n", cajero3->numClientesAtendidosGlobal);
     printf("Programa terminado.\n");
     pthread_mutex_lock(&mutexLog);
     for (int i = 0; i < 3; i++)
