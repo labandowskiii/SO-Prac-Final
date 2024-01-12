@@ -9,8 +9,6 @@ struct Cliente
 {
     int id;
     int estado;         // 0: Esperando | 1: En cajero | 2: atendido
-    time_t horaEntrada; // variable para controlar los 10 segundos antes de irse
-    int seVa;           // simulador de 10% de irse
 };
 
 struct Cajero
@@ -31,12 +29,12 @@ pthread_mutex_t mutexInteractuarReponedor;
 pthread_cond_t condicionInteractuarReponedor;
 
 // TODO: Mirar de mover a main
-struct Cajero cajero1;
-struct Cajero cajero2;
-struct Cajero cajero3;
+struct Cajero *cajero1;
+struct Cajero *cajero2;
+struct Cajero *cajero3;
 pthread_t hiloCajero1, hiloCajero2, hiloCajero3, hiloReponedor;
 // TODO: Mirar de eliminar y usar los de cajero
-int clientesC1 = 0, clientesC2 = 0, clientesC3 = 0;
+int clientesAtendidosCajero1 = 0, clientesAtendidosCajero2 = 0, clientesAtendidosCajero3 = 0;
 
 /* Declaración de funciones*/
 void crearNuevoCliente(int s);
@@ -101,11 +99,11 @@ int main(int argc, char *argv[])
     }
 
     // Crear 3 hilos cajero
-    struct Cajero *cajero1 = malloc(sizeof(struct Cajero));
+    cajero1 = malloc(sizeof(struct Cajero));
     cajero1->id = 1;
-    struct Cajero *cajero2 = malloc(sizeof(struct Cajero));
+    cajero2 = malloc(sizeof(struct Cajero));
     cajero2->id = 2;
-    struct Cajero *cajero3 = malloc(sizeof(struct Cajero));
+    cajero3 = malloc(sizeof(struct Cajero));
     cajero3->id = 3;
     // pthread_t hiloCajero1, hiloCajero2, hiloCajero3;
     pthread_create(&hiloCajero1, NULL, cajero, (void *)cajero1);
@@ -166,9 +164,6 @@ void crearNuevoCliente(int s)
         // Rellenamos los datos del cliente (id, estado=0)
         clientes[posicion]->estado = 0;
         clientes[posicion]->id = posicion + 1;
-        clientes[posicion]->horaEntrada = time(NULL);
-        int probabilidad = rand() % 100;
-        clientes[posicion]->seVa = probabilidad < 10; // boolean del 10%
         pthread_create(&hiloCliente, NULL, cliente, (void *)clientes[posicion]);
     }
     else
@@ -266,7 +261,7 @@ void *cajero(void *arg)
                 // El cliente tiene algun problema y no se puede completar la compra
                 printf("Cajero %d: Error en el cliente, no se puede realizar la compra.\n", cajero->id);
                 pthread_mutex_lock(&mutexLog);
-                writeLogMessage("Cajero", cajero->id, "Error en el cajero.");
+                writeLogMessage("Cajero", cajero->id, "Error en el cliente, no se puede realizar la compra.");
                 pthread_mutex_unlock(&mutexLog);
                 sleep(10);
             }
@@ -292,16 +287,17 @@ void *cajero(void *arg)
 
             // Aumentamos el número de clientes atendidos
             cajero->numClientesAtendidos++;
+            cajero->numClientesAtendidosGlobal++;
             switch (cajero->id)
             {
             case 1:
-                clientesC1++;
+                clientesAtendidosCajero1++;
                 break;
             case 2:
-                clientesC2++;
+                clientesAtendidosCajero2++;
                 break;
             case 3:
-                clientesC3++;
+                clientesAtendidosCajero3++;
                 break;
             }
 
@@ -349,7 +345,6 @@ void *cliente(void *arg)
     if (posibilidadIrse <= 10)
     {
         pthread_mutex_lock(&mutexListaClientes);
-        cliente->seVa = 1;
         cliente->estado = 2;
         clientes[cliente->id - 1]->estado = 2;
         pthread_mutex_unlock(&mutexListaClientes);
@@ -429,9 +424,9 @@ void terminarPrograma(int s)
     pthread_cancel(hiloCajero2);
     pthread_cancel(hiloCajero3);
     pthread_cancel(hiloReponedor);
-    printf("\nCajero1 ha atendido a %d clientes\n", clientesC1);
-    printf("Cajero2 ha atendido a %d clientes\n", clientesC2);
-    printf("Cajero3 ha atendido a %d clientes\n", clientesC3);
+    printf("\nCajero1 ha atendido a %d clientes\n", cajero1->numClientesAtendidosGlobal);
+    printf("Cajero2 ha atendido a %d clientes\n", cajero2->numClientesAtendidosGlobal);
+    printf("Cajero3 ha atendido a %d clientes\n", cajero3->numClientesAtendidosGlobal);
     printf("Programa terminado.\n");
     pthread_mutex_lock(&mutexLog);
     for (int i = 0; i < 3; i++)
@@ -440,15 +435,15 @@ void terminarPrograma(int s)
         switch (i)
         {
         case 0:
-            sprintf(buffer, "He atendido %d clientes", clientesC1);
+            sprintf(buffer, "He atendido %d clientes", cajero1->numClientesAtendidosGlobal);
             writeLogMessage("Cajero", 1, buffer);
             break;
         case 1:
-            sprintf(buffer, "He atendido %d clientes", clientesC2);
+            sprintf(buffer, "He atendido %d clientes", cajero2->numClientesAtendidosGlobal);
             writeLogMessage("Cajero", 2, buffer);
             break;
         case 2:
-            sprintf(buffer, "He atendido %d clientes", clientesC3);
+            sprintf(buffer, "He atendido %d clientes", cajero3->numClientesAtendidosGlobal);
             writeLogMessage("Cajero", 3, buffer);
             break;
         }
