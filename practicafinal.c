@@ -51,6 +51,8 @@ void terminarPrograma(int s);
 
 void writeLogMessage(char *persona, int id, char *msg);
 
+int calcularAleatorio(int min, int max);
+
 int main(int argc, char *argv[])
 {
     // Crear sigaction para crear clientes
@@ -211,7 +213,7 @@ void *cajero(void *arg)
             pthread_mutex_unlock(&mutexListaClientes);
 
             // Calculamos el tiempo de atención (aleatorio entre 1 y 5 segundos)
-            int tiempoTrabajo = rand() % 10 + 1;
+            int tiempoTrabajo = calcularAleatorio(1, 5);
             printf("Cajero %d: Tiempo de atención: %d\n", cajero->id, tiempoTrabajo);
 
             // Escribimos la hora de la atención de la compra
@@ -226,7 +228,7 @@ void *cajero(void *arg)
             sleep(tiempoTrabajo);
 
             // Generamos un numero aleatorio entre 1 y 100
-            int numeroAleatorio = rand() % 100 + 1;
+            int numeroAleatorio = calcularAleatorio(1, 100);
             printf("Numero aleatorio: %d\n", numeroAleatorio);
             if (71 <= numeroAleatorio && numeroAleatorio <= 95)
             {
@@ -337,14 +339,14 @@ void *cliente(void *arg)
     pthread_mutex_unlock(&mutexLog);
 
     // Calculamos el tiempo de espera maximo
-    int tiempoEspera = rand() % 10 + 1;
+    int tiempoEspera = calcularAleatorio(1, 10);
 
     // Esperamos a que expire el tiempo de espera o que nos atienda un agente
     sleep(tiempoEspera);
 
     // Calcular posibilidad del 10% de irse
-    int posibilidadIrse = rand() % 100 + 1;
-    if (posibilidadIrse < 10)
+    int posibilidadIrse = calcularAleatorio(1, 100);
+    if (posibilidadIrse <= 10)
     {
         pthread_mutex_lock(&mutexListaClientes);
         cliente->seVa = 1;
@@ -405,7 +407,7 @@ void *reponedor(void *arg)
         pthread_mutex_unlock(&mutexLog);
 
         // Simular tiempo de trabajo (aleatorio entre 1 y 5 segundos)
-        int tiempoTrabajo = rand() % 5 + 1;
+        int tiempoTrabajo = calcularAleatorio(1, 5);
         sleep(tiempoTrabajo);
 
         // Avisar de que ha terminado el reponedor
@@ -466,4 +468,10 @@ void writeLogMessage(char *persona, int id, char *msg)
     archivoLog = fopen(rutaArchivoLog, "a");
     fprintf(archivoLog, "[%s] %s (%d): %s \n", stnow, persona, id, msg);
     fclose(archivoLog);
+}
+
+int calcularAleatorio(int min, int max)
+{
+    srand(time(NULL));
+    return rand() % (max - min + 1) + min;
 }
