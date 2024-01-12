@@ -47,8 +47,6 @@ void *cliente(void *arg);
 
 void *reponedor(void *arg);
 
-void *verificarTiempoCliente(void *arg);
-
 void terminarPrograma(int s);
 
 void writeLogMessage(char *persona, int id, char *msg);
@@ -213,7 +211,8 @@ void *cajero(void *arg)
             pthread_mutex_unlock(&mutexListaClientes);
 
             // Calculamos el tiempo de atención (aleatorio entre 1 y 5 segundos)
-            int tiempoTrabajo = rand() % 5 + 1;
+            int tiempoTrabajo = rand() % 10 + 1;
+            printf("Cajero %d: Tiempo de atención: %d\n", cajero->id, tiempoTrabajo);
 
             // Escribimos la hora de la atención de la compra
             char buffer[40];
@@ -420,32 +419,6 @@ void *reponedor(void *arg)
         pthread_mutex_unlock(&mutexInteractuarReponedor);
     }
     return NULL;
-}
-
-void *verificarTiempoCliente(void *arg)
-{
-    // signal (SIGUSR2, terminarHilos);
-    while (1)
-    { // se ejecuta todo el programa
-        pthread_testcancel();
-        for (int i = 0; i < 20; i++)
-        {
-            if (clientes[i]->estado == 0)
-            { // cliente esperando
-                if (time(NULL) - clientes[i]->horaEntrada >= 10)
-                { // ha esperado más de 10 segundos
-                    if (clientes[i]->seVa)
-                    {
-                        clientes[i]->estado = 2; // señalizamos que el cliente se ha ido
-                        printf("Cliente %d: Se ha cansado de esperar y se ha ido.\n", clientes[i]->id);
-                        pthread_mutex_lock(&mutexLog);
-                        writeLogMessage("Cliente", clientes[i]->id, "Se ha cansado de esperar y se ha ido.");
-                        pthread_mutex_unlock(&mutexLog);
-                    }
-                }
-            }
-        }
-    }
 }
 
 void terminarPrograma(int s)
